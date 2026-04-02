@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# TurboRepo
+.turbo/
+*.log
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Claude Code configuration — developer tooling, not part of the public source.
+.claude/
+CLAUDE.md
+
+# TypeScript build files
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# JavaScript source maps and declaration files
+*.js.map
+*.d.ts
+*.d.ts.map
+
+# SvelteKit build artifacts (not used in this package)
+.svelte-kit/
+.svelte/
+__sapper__/
+
+# Turbo build logs
+.turbo/*.log
+
+# pnpm store
+.pnpm-store/
