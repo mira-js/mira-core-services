@@ -2,6 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { mapWithConcurrency } from './concurrency.js'
 
 describe('mapWithConcurrency', () => {
+  it('preserves input order', async () => {
+    const result = await mapWithConcurrency([3, 1, 2], 2, async (n) => n * 2)
+    expect(result).toEqual([6, 2, 4])
+  })
+
   it('handles empty array', async () => {
     const result = await mapWithConcurrency([], 3, async (x) => x)
     expect(result).toEqual([])
