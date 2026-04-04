@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { CollectedItem, ExtractionResult, PainPointTheme, Result, Sentiment } from '@mia/shared-core'
+import type { CollectedItem, ExtractionResult, PainPointTheme, Result, Sentiment } from '@mira/shared-core'
 import { callLLM } from './llm.js'
 
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ const JinaResponseSchema = z.object({
 
 // ─── Prompt helpers ───────────────────────────────────────────────────────────
 
-const PROMPTS_DIR = process.env.MIA_PROMPTS_DIR ?? join(__dirname, '../../../../prompts')
+const PROMPTS_DIR = process.env.MIRA_PROMPTS_DIR ?? join(__dirname, '../../../../prompts')
 
 function loadPrompt(filename: string): string {
   return readFileSync(join(PROMPTS_DIR, filename), 'utf8')

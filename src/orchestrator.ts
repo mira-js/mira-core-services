@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq'
 import { Redis } from 'ioredis'
-import type { JobStatus, ResearchJobInput, ResearchResult } from '@mia/shared-core'
+import type { JobStatus, ResearchJobInput, ResearchResult } from '@mira/shared-core'
 
 const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,

@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import type { Result } from '@mia/shared-core'
+import type { Result } from '@mira/shared-core'
 
 let pool: Pool | null = null
 

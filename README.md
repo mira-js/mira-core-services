@@ -1,18 +1,18 @@
-# @mia/core-services
+# @mira/core-services
 
-[![npm](https://img.shields.io/npm/v/@mia/core-services)](https://www.npmjs.com/package/@mia/core-services)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://github.com/mira-js/mia-core/blob/main/LICENSE)
+[![npm](https://img.shields.io/npm/v/@mira/core-services)](https://www.npmjs.com/package/@mira/core-services)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://github.com/mira-js/mira-core/blob/main/LICENSE)
 
-Shared service implementations for the MIA pipeline. This package contains the core business logic for job orchestration, LLM analysis, database operations, and Redis/OpenViking integration. Used by `@mia/api-core` and any custom implementations that need to reuse the pipeline logic.
+Shared service implementations for the mira pipeline. This package contains the core business logic for job orchestration, LLM analysis, database operations, and Redis/OpenViking integration. Used by `@mira/api-core` and any custom implementations that need to reuse the pipeline logic.
 
 ---
 
 ## Install
 
 ```bash
-npm install @mia/core-services
+npm install @mira/core-services
 # or
-pnpm add @mia/core-services
+pnpm add @mira/core-services
 ```
 
 ---
@@ -24,7 +24,7 @@ pnpm add @mia/core-services
 BullMQ queue management for research jobs.
 
 ```ts
-import { orchestrator } from '@mia/core-services'
+import { orchestrator } from '@mira/core-services'
 
 // Enqueue a new research job
 const { id } = await orchestrator.enqueue({
@@ -46,7 +46,7 @@ const jobs = await orchestrator.listJobs()
 OpenAI-compatible LLM calls with structured output parsing.
 
 ```ts
-import { callLLM, extractFromItem } from '@mia/core-services'
+import { callLLM, extractFromItem } from '@mira/core-services'
 
 // Raw LLM call with structured output
 const result = await callLLM({
@@ -65,7 +65,7 @@ const extraction = await extractFromItem(item, query)
 Full pipeline from raw items to synthesized research result.
 
 ```ts
-import { analyzeItems } from '@mia/core-services'
+import { analyzeItems } from '@mira/core-services'
 
 const result = await analyzeItems({
   query: 'project management tools',
@@ -80,7 +80,7 @@ const result = await analyzeItems({
 PostgreSQL client with typed queries for research jobs.
 
 ```ts
-import { db } from '@mia/core-services'
+import { db } from '@mira/core-services'
 
 // Create a job record
 const job = await db.createJob({
@@ -105,7 +105,7 @@ const jobs = await db.listJobs({ limit: 50 })
 Redis client with connection pooling and typed operations.
 
 ```ts
-import { redis } from '@mia/core-services'
+import { redis } from '@mira/core-services'
 
 // Set/get cached embeddings
 await redis.setEmbeddings('key', embeddings)
@@ -121,7 +121,7 @@ const cached = await redis.getCachedLLMResponse('prompt-hash')
 OpenViking context store integration for semantic search and storage.
 
 ```ts
-import { openviking } from '@mia/core-services'
+import { openviking } from '@mira/core-services'
 
 // Store collected items
 await openviking.ingestItems(items, { query, depth })
@@ -130,7 +130,7 @@ await openviking.ingestItems(items, { query, depth })
 const context = await openviking.findRelevantContext(query, { maxResults: 10 })
 
 // Get resource by URI
-const resource = await openviking.getResource('viking://resources/mia/items/abc123')
+const resource = await openviking.getResource('viking://resources/mira/items/abc123')
 ```
 
 ### Concurrency Utilities (`withConcurrency`)
@@ -138,7 +138,7 @@ const resource = await openviking.getResource('viking://resources/mia/items/abc1
 Parallel execution with configurable concurrency limits.
 
 ```ts
-import { withConcurrency } from '@mia/core-services'
+import { withConcurrency } from '@mira/core-services'
 
 // Process items in parallel with rate limiting
 const results = await withConcurrency(
@@ -152,14 +152,14 @@ const results = await withConcurrency(
 
 ## Pipeline Flow
 
-The services work together to implement the full MIA research pipeline:
+The services work together to implement the full mira research pipeline:
 
 ```
 1. Job Orchestration
    └── orchestrator.enqueue() → BullMQ job
 
 2. Collection Phase
-   └── External collectors (@mia/core-collectors) → CollectedItem[]
+   └── External collectors (@mira/core-collectors) → CollectedItem[]
 
 3. OpenViking Ingestion (optional)
    └── openviking.ingestItems() → Store for future context
@@ -191,19 +191,19 @@ The services work together to implement the full MIA research pipeline:
 | `JINA_API_KEY` | No | — | Required for embeddings and clustering |
 | `OPENVIKING_URL` | No | — | OpenViking base URL (optional) |
 | `OPENVIKING_API_KEY` | No | — | OpenViking API key (optional) |
-| `MIA_PROMPTS_DIR` | No | `../../prompts` | Directory for custom prompt overrides |
-| `MIA_EXTRACTION_CONCURRENCY` | No | `5` | Parallel LLM calls during extraction |
-| `MIA_OPENVIKING_INGEST_CONCURRENCY` | No | `10` | Parallel writes to OpenViking |
+| `mira_PROMPTS_DIR` | No | `../../prompts` | Directory for custom prompt overrides |
+| `mira_EXTRACTION_CONCURRENCY` | No | `5` | Parallel LLM calls during extraction |
+| `mira_OPENVIKING_INGEST_CONCURRENCY` | No | `10` | Parallel writes to OpenViking |
 
 ---
 
 ## Error Handling
 
-All service functions return `Result<T, Error>` types (from `@mia/shared-core`) instead of throwing exceptions. This enables railway-oriented programming patterns:
+All service functions return `Result<T, Error>` types (from `@mira/shared-core`) instead of throwing exceptions. This enables railway-oriented programming patterns:
 
 ```ts
-import type { Result } from '@mia/shared-core'
-import { analyzeItems } from '@mia/core-services'
+import type { Result } from '@mira/shared-core'
+import { analyzeItems } from '@mira/core-services'
 
 const result: Result<ResearchResult> = await analyzeItems({ query, items, depth })
 
@@ -221,10 +221,10 @@ if (result.ok) {
 
 ### Prompt Overrides
 
-Override any of the three pipeline prompts by setting `MIA_PROMPTS_DIR`:
+Override any of the three pipeline prompts by setting `mira_PROMPTS_DIR`:
 
 ```bash
-MIA_PROMPTS_DIR=/path/to/my-prompts
+mira_PROMPTS_DIR=/path/to/my-prompts
 ```
 
 Required files:
@@ -246,12 +246,8 @@ process.env.OPENAI_MODEL = 'llama-3.3-70b-versatile'
 Adjust parallelism for your infrastructure:
 
 ```bash
-MIA_EXTRACTION_CONCURRENCY=10        # More parallel LLM calls
-MIA_OPENVIKING_INGEST_CONCURRENCY=5  # Slower OpenViking writes
+mira_EXTRACTION_CONCURRENCY=10        # More parallel LLM calls
+mira_OPENVIKING_INGEST_CONCURRENCY=5  # Slower OpenViking writes
 ```
 
 ---
-
-## Part of mia-core
-
-This package is part of the [mia-core](https://github.com/mira-js/mia-core) monorepo — a self-hostable market intelligence engine.

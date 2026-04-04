@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { CollectedItem, OpenVikingFindOptions } from '@mia/shared-core'
+import type { CollectedItem, OpenVikingFindOptions } from '@mira/shared-core'
 
 const TempUploadResponseSchema = z.object({
   result: z.object({ temp_path: z.string() }),

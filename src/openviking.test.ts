@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { CoreSource, type CollectedItem } from '@mia/shared-core'
+import { CoreSource, type CollectedItem } from '@mira/shared-core'
 import { openVikingClient } from './openviking.js'
 
 const fetchMock = vi.fn()

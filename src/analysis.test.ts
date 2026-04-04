@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { CoreSource, type CollectedItem, type ExtractionResult } from '@mia/shared-core'
+import { CoreSource, type CollectedItem, type ExtractionResult } from '@mira/shared-core'
 
 const { mockCallLLM } = vi.hoisted(() => ({ mockCallLLM: vi.fn() }))
 

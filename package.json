@@ -1,5 +1,5 @@
 {
-  "name": "@mia/core-services",
+  "name": "@mira/core-services",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mia/shared-core": "workspace:*",
+    "@mira/shared-core": "workspace:*",
     "bullmq": "^5.34.5",
     "ioredis": "^5.4.2",
     "openai": "^4.77.0",
