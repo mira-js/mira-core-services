@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { CoreSource, type CollectedItem, type ExtractionResult } from '@mira/shared-core'
+import { CoreSource, type CollectedItem, type ExtractionResult, type PainPointTheme } from '@mira/shared-core'
 
 const { mockCallLLM } = vi.hoisted(() => ({ mockCallLLM: vi.fn() }))
 
@@ -33,13 +33,15 @@ const mockItem: CollectedItem = {
   subreddit: 'saas',
 }
 
-const validExtractionJson = JSON.stringify({
+const validExtraction = {
   pain_points: ['invoicing tool crashes on send'],
   sentiment: 'negative',
   category: 'complaint',
   mentioned_tools: [],
   key_quote: 'Every time I try to send an invoice it just crashes.',
-})
+}
+
+const validExtractionJson = JSON.stringify([validExtraction])
 
 const mockExtraction: ExtractionResult = {
   pain_points: ['invoicing tool crashes on send'],
@@ -74,7 +76,7 @@ describe('extractItem', () => {
   })
 
   it('strips markdown fences from LLM response', async () => {
-    vi.mocked(callLLM).mockResolvedValue('```json\n' + validExtractionJson + '\n```')
+    vi.mocked(callLLM).mockResolvedValue('```json\n' + JSON.stringify([validExtraction]) + '\n```')
     const result = await extractItem(mockItem)
     expect(result.ok).toBe(true)
   })
@@ -95,7 +97,7 @@ describe('extractItem', () => {
 
   it('returns ok: false when Zod schema validation fails', async () => {
     vi.mocked(callLLM).mockResolvedValue(
-      JSON.stringify({ pain_points: [], sentiment: 'positive', category: 'complaint', mentioned_tools: [] }),
+      JSON.stringify([{ pain_points: [], sentiment: 'positive', category: 'complaint', mentioned_tools: [] }]),
     )
     const result = await extractItem(mockItem)
     expect(result.ok).toBe(false)
@@ -200,7 +202,7 @@ describe('aggregateThemes', () => {
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(result.value).toHaveLength(2)
-      const themes = result.value.map((t) => t.theme)
+      const themes = result.value.map((t: PainPointTheme) => t.theme)
       expect(themes).toContain(mockExtraction.key_quote)
       expect(themes).toContain(differentExtraction.key_quote)
     })

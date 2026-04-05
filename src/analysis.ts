@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { CollectedItem, ExtractionResult, PainPointTheme, Result, Sentiment } from '@mira/shared-core'
+import { BatchError } from '@mira/shared-core'
 import { callLLM } from './llm.js'
 
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
@@ -13,6 +14,8 @@ const ExtractionResultSchema = z.object({
   mentioned_tools: z.array(z.string()),
   key_quote: z.string(),
 })
+
+const BatchExtractionResultSchema = z.array(ExtractionResultSchema)
 
 const JinaResponseSchema = z.object({
   data: z.array(z.object({ index: z.number(), embedding: z.array(z.number()) })),
@@ -106,17 +109,58 @@ const sentimentScore: Record<Sentiment, number> = { negative: -1, neutral: 0, po
 
 // ─── Exported functions ───────────────────────────────────────────────────────
 
-export async function extractItem(item: CollectedItem): Promise<Result<ExtractionResult>> {
+export async function extractBatch(
+  items: CollectedItem[],
+): Promise<Result<ExtractionResult, BatchError>[]> {
+  if (!items.length) return []
+
   try {
-    const content = [item.title, item.body, ...item.raw_replies.slice(0, 5)].join('\n\n')
+    const itemsJson = items.map((item) => ({
+      title: item.title,
+      body: item.body,
+      replies: item.raw_replies.slice(0, 5),
+      source: item.source,
+    }))
     const template = loadPrompt('extract_pain_points.txt')
-    const prompt = fillTemplate(template, { content, source: item.source })
-    const raw = await callLLM([{ role: 'user', content: prompt }])
+    const prompt = fillTemplate(template, { items: JSON.stringify(itemsJson, null, 2) })
+    const raw = await callLLM([{ role: 'user', content: prompt }], {
+      maxTokens: 1024 * items.length,
+      temperature: 0,
+    })
     const parsed: unknown = JSON.parse(stripFences(raw))
-    return { ok: true, value: ExtractionResultSchema.parse(parsed) }
+    const validated = BatchExtractionResultSchema.parse(parsed)
+
+    if (validated.length !== items.length) {
+      return items.map((item, index) => ({
+        ok: false as const,
+        error: new BatchError(
+          `LLM returned ${validated.length} results for ${items.length} items`,
+          index,
+          item,
+        ),
+      }))
+    }
+
+    return validated.map((result) => ({ ok: true as const, value: result }))
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error : new Error(String(error)) }
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return items.map((item, index) => ({
+      ok: false as const,
+      error: new BatchError(errorMessage, index, item),
+    }))
   }
+}
+
+export async function extractItem(item: CollectedItem): Promise<Result<ExtractionResult>> {
+  const results = await extractBatch([item])
+  const result = results[0]
+  if (!result) {
+    return { ok: false, error: new Error('No result from batch') }
+  }
+  if (result.ok) {
+    return { ok: true, value: result.value }
+  }
+  return { ok: false, error: result.error }
 }
 
 type ExtractionPair = { item: CollectedItem; extraction: ExtractionResult }
