@@ -7,10 +7,10 @@ import { callLLM } from './llm.js'
 
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
 
-const ExtractionResultSchema = z.object({
+export const ExtractionResultSchema = z.object({
   pain_points: z.array(z.string()),
   sentiment: z.enum(['negative', 'neutral', 'positive']),
-  category: z.enum(['complaint', 'feature-request', 'workflow-friction', 'pricing', 'switching-signal']),
+  category: z.enum(['complaint', 'feature-request', 'workflow-friction', 'pricing', 'switching-signal', 'integration-issue', 'comparison', 'workaround', 'information-seeking']),
   mentioned_tools: z.array(z.string()),
   key_quote: z.string(),
 })
