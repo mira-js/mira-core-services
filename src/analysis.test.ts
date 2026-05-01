@@ -35,7 +35,7 @@ const mockItem: CollectedItem = {
 
 const validExtraction = {
   pain_points: ['invoicing tool crashes on send'],
-  sentiment: 'negative',
+  sentiment: -0.8,
   category: 'complaint',
   mentioned_tools: [],
   key_quote: 'Every time I try to send an invoice it just crashes.',
@@ -45,7 +45,7 @@ const validExtractionJson = JSON.stringify([validExtraction])
 
 const mockExtraction: ExtractionResult = {
   pain_points: ['invoicing tool crashes on send'],
-  sentiment: 'negative',
+  sentiment: -0.8,
   category: 'complaint',
   mentioned_tools: [],
   key_quote: 'Every time I try to send an invoice it just crashes.',
@@ -69,7 +69,7 @@ describe('extractItem', () => {
     const result = await extractItem(mockItem)
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value.sentiment).toBe('negative')
+    expect(result.value.sentiment).toBeCloseTo(-0.8)
     expect(result.value.category).toBe('complaint')
     expect(result.value.pain_points).toHaveLength(1)
     expect(result.value.key_quote).toBeTruthy()

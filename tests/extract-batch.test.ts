@@ -24,7 +24,7 @@ const makeItem = (id: number, overrides: Partial<CollectedItem> = {}): Collected
 
 const mockExtraction: ExtractionResult = {
   pain_points: ['slow'],
-  sentiment: 'negative',
+  sentiment: -0.8,
   category: 'complaint',
   mentioned_tools: [],
   key_quote: 'slow',

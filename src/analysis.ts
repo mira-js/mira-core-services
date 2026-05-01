@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { CollectedItem, ExtractionResult, PainPointTheme, Result, Sentiment } from '@mira/shared-core'
+import type { CollectedItem, ExtractionResult, PainPointTheme, Result } from '@mira/shared-core'
 import { BatchError } from '@mira/shared-core'
 import { callLLM } from './llm.js'
 
@@ -9,7 +9,7 @@ import { callLLM } from './llm.js'
 
 export const ExtractionResultSchema = z.object({
   pain_points: z.array(z.string()),
-  sentiment: z.enum(['negative', 'neutral', 'positive']),
+  sentiment: z.number().min(-1).max(1),
   category: z.enum(['complaint', 'feature-request', 'workflow-friction', 'pricing', 'switching-signal', 'integration-issue', 'comparison', 'workaround', 'information-seeking']),
   mentioned_tools: z.array(z.string()),
   key_quote: z.string(),
@@ -103,9 +103,33 @@ function greedyCluster<T>(items: T[], embeddings: number[][], threshold: number)
   return clusters
 }
 
-// ─── Sentiment scoring ──────────────────────────────────────────���─────────────
+// ─── Theme synthesis ──────────────────────────────────────────────────────────
 
-const sentimentScore: Record<Sentiment, number> = { negative: -1, neutral: 0, positive: 1 }
+async function synthesizeThemeLabel(
+  cluster: ExtractionPair[],
+): Promise<Result<string>> {
+  const bullets = cluster
+    .slice(0, 5)
+    .map((p) => '- ' + (p.extraction.pain_points[0] ?? p.extraction.key_quote))
+    .join('\n')
+
+  const prompt =
+    'You are labelling a cluster of related user pain points.\n' +
+    'Write a 3–6 word label in Title Case that captures the shared theme.\n' +
+    'Return ONLY the label — no quotes, no trailing punctuation, no commentary.\n\n' +
+    'Pain points:\n' + bullets
+
+  const raw = await callLLM(
+    [{ role: 'user', content: prompt }],
+    { maxTokens: 20, temperature: 0 },
+  )
+
+  const cleaned = raw.trim().replace(/^["'`]+|["'`.!?]+$/g, '').trim()
+  if (!cleaned) {
+    return { ok: false, error: new Error('Empty label from LLM') }
+  }
+  return { ok: true, value: cleaned }
+}
 
 // ─── Exported functions ───────────────────────────────────────────────────────
 
@@ -190,25 +214,34 @@ export async function aggregateThemes(
           0.75,
         )
 
+    const built = await Promise.all(
+      clusters.map(async (cluster) => {
+        const avgSentiment =
+          cluster.reduce((sum, p) => sum + Math.max(-1, Math.min(1, p.extraction.sentiment)), 0) /
+          cluster.length
+
+        const rawTheme = cluster[0].extraction.key_quote
+        const labelResult = await synthesizeThemeLabel(cluster)
+        const synthesized_name = labelResult.ok ? labelResult.value : undefined
+
+        return {
+          theme: rawTheme,
+          ...(synthesized_name ? { synthesized_name } : {}),
+          frequency: cluster.length,
+          sources: [...new Set(cluster.map((p) => p.item.source))],
+          sentiment: avgSentiment,
+          evidence: cluster.slice(0, 3).map((p) => ({
+            source: p.item.source,
+            url: p.item.url,
+            excerpt: p.extraction.key_quote,
+          })),
+        } satisfies PainPointTheme
+      }),
+    )
+
     return {
       ok: true,
-      value: clusters
-        .map((cluster) => {
-          const avgSentiment =
-            cluster.reduce((sum, p) => sum + sentimentScore[p.extraction.sentiment], 0) / cluster.length
-          return {
-            theme: cluster[0].extraction.key_quote,
-            frequency: cluster.length,
-            sources: [...new Set(cluster.map((p) => p.item.source))],
-            sentiment: avgSentiment,
-            evidence: cluster.slice(0, 3).map((p) => ({
-              source: p.item.source,
-              url: p.item.url,
-              excerpt: p.extraction.key_quote,
-            })),
-          } satisfies PainPointTheme
-        })
-        .sort((a, b) => b.frequency - a.frequency),
+      value: built.sort((a, b) => b.frequency - a.frequency),
     }
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error : new Error(String(error)) }
