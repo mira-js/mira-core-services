@@ -38,6 +38,7 @@ export const orchestrator = {
       sources: job.data.sources,
       depth: job.data.depth,
       createdAt: new Date(job.timestamp).toISOString(),
+      progress: job.progress ?? undefined,
       result: job.returnvalue ?? undefined,
     }
   },
