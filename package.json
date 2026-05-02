@@ -2,6 +2,7 @@
   "name": "@mira/core-services",
   "version": "0.1.0",
   "type": "module",
+  "files": ["dist"],
   "main": "./dist/index.js",
   "exports": {
     ".": {
